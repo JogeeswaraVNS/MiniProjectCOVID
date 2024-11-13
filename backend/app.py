@@ -41,18 +41,6 @@ PATCH_SIZE = 16
 IMG_SIZE = 64
 k = 3
 
-def preprocess_image(image, target_size):
-    try:
-        # file.seek(0)
-        # image = Image.open(io.BytesIO(file.read()))
-        # image = image.convert('RGB')
-        # image = image.resize(target_size)
-        # image = img_to_array(image)
-        image = np.expand_dims(image, axis=0)
-        return image
-    except Exception as e:
-        print(f"Error processing image: {e}")
-        raise e
 
 def image_to_patches(image, patch_size):
     h, w, c = image.shape
@@ -112,7 +100,7 @@ def get_patch():
     processed_image = np.expand_dims(reconstructed_image, axis=0)
     result=model.predict(processed_image)
     print(result)
-    save_image(reconstructed_image)
+    # save_image(reconstructed_image)
     img_io = io.BytesIO()
     Image.fromarray(reconstructed_image).save(img_io, 'PNG')
     img_io.seek(0)
