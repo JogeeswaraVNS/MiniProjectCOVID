@@ -41,6 +41,9 @@ function Upload() {
 
       // Send the image path to get the patched image
       const patchResponse = await axios.post(`${api}/get-patch`, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
         image_url: api + imageUrlPath
       }, {
         responseType: 'blob' // Expecting an image blob as response

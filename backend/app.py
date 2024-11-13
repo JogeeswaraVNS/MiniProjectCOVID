@@ -139,7 +139,7 @@ def get_patch():
     data = request.json
     if 'image_url' not in data:
         return jsonify({"error": "Image URL not provided"}), 400
-
+    print(data)
     image_url = data['image_url']
 
     # Load and resize the image
