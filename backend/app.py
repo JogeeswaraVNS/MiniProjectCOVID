@@ -1,8 +1,9 @@
 import tensorflow as tf
-from flask import Flask,jsonify,request,Response
+from flask import Flask,jsonify,request,Response,send_file
 from flask_cors import CORS
 import os
-import json
+import io
+from PIL import Image
 
 
 
@@ -66,7 +67,7 @@ def save_image(image):
 
     # Save the reconstructed image in the 'graphed' folder using OpenCV
     save_path = os.path.join(UPLOAD_FOLDER, 'PatchedImg.png')
-    cv2.imwrite(save_path, image)  # Directly save the image using OpenCV
+    cv2.imwrite(save_path, image)
 
 def get_knn_for_patch(patches, patch_index, k):
     """
@@ -132,6 +133,43 @@ def process_images_in_category(category, datadir, patch_size, k, save_dir):
         save_image(reconstructed_image)
 
 
+@app.route('/get-patch', methods=['POST'])
+def get_patch():
+    # Expecting 'image_url' in the JSON payload
+    data = request.json
+    if 'image_url' not in data:
+        return jsonify({"error": "Image URL not provided"}), 400
+
+    image_url = data['image_url']
+
+    # Load and resize the image
+    image = cv2.imread(image_url)
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    
+    # Step 1: Convert image into patches
+    patches = image_to_patches(image, PATCH_SIZE)
+    
+    # Step 2: Process patches with neighbors
+    updated_patches = process_patches_with_neighbors(patches, k)
+    
+    # Step 3: Reconstruct image from patches
+    reconstructed_image = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    
+    # Step 4: Convert the reconstructed image to a PNG file in memory
+    img_io = io.BytesIO()
+    Image.fromarray(reconstructed_image).save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    # Optionally remove the original file
+    try:
+        os.remove(image_url)
+    except Exception as e:
+        print(f"Error deleting file {image_url}: {e}")
+
+    return send_file(img_io, mimetype='image/png')
 
 
 
@@ -147,6 +185,10 @@ def upload_image():
     # Save the image to the upload folder
     image_path = os.path.join(UPLOAD_FOLDER, image.filename)
     image.save(image_path)
+
+
+
+
 
     # Return the image path for visualization
     return jsonify({"message": "Image uploaded successfully", "image_url": f"/uploads/{image.filename}"})
