@@ -27,7 +27,8 @@ function Upload() {
       // Upload the image
       const uploadResponse = await axios.post(`${api}/upload-image`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          "ngrok-skip-browser-warning": "true",
         }
       });
       
@@ -42,9 +43,10 @@ function Upload() {
       // Send the image path to get the patched image
       const patchResponse = await axios.post(`${api}/get-patch`, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          "ngrok-skip-browser-warning": "true",
         },
-        image_url: api + imageUrlPath
+        image_url: '.'+imageUrlPath
       }, {
         responseType: 'blob' // Expecting an image blob as response
       });
@@ -69,14 +71,14 @@ function Upload() {
       {uploadedImage && (
         <div>
           <h3>Original Uploaded Image:</h3>
-          <img src={uploadedImage} alt="Uploaded" style={{ width: "85%" }} />
+          <img src={uploadedImage} alt="Uploaded" style={{ width: "20rem" }} />
         </div>
       )}
 
       {patchedImage && (
         <div>
           <h3>Patched Image:</h3>
-          <img src={patchedImage} alt="Patched" style={{ width: "85%" }} />
+          <img src={patchedImage} alt="Patched" style={{ width: "20rem" }} />
         </div>
       )}
     </div>
