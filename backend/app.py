@@ -147,8 +147,9 @@ def upload_image():
     # Save the image to the upload folder
     image_path = os.path.join(UPLOAD_FOLDER, image.filename)
     image.save(image_path)
-    
-    return jsonify({"message": "Image uploaded successfully", "path": image_path})
+
+    # Return the image path for visualization
+    return jsonify({"message": "Image uploaded successfully", "image_url": f"/uploads/{image.filename}"})
 
 
 if __name__ == '__main__':

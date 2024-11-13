@@ -2,28 +2,56 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 function Upload() {
-  const [response, setResponse] = useState('');
-  let api = "https://dog-suitable-visually.ngrok-free.app";
+  let api = "https://dog-suitable-visually.ngrok-free.app/";
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState('');
+  const [imageUrl, setImageUrl] = useState('');  // State to hold the uploaded image URL
 
-  const handlePredict = async () => {
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage('Please select an image to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
     try {
-      const result = await axios.post(`${api}/predict`, {
+      const response = await axios.post(`${api}upload-image`, formData, {
         headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      setResponse(result.data);
+      setMessage(response.data.message);
+      
+      // Set the uploaded image URL for visualization
+      if (response.data.image_url) {
+        setImageUrl(api + response.data.image_url); // Adjust if `image_url` is a relative path
+      }
     } catch (error) {
-      console.error("Error making prediction request", error);
-      setResponse("An error occurred");
+      console.error('Error uploading image:', error);
+      setMessage('Failed to upload image');
     }
   };
 
   return (
-    <div className='text-white'>
-      <h1>Upload</h1>
-      <button onClick={handlePredict}>Make Prediction</button>
-      <p>Response: {response}</p>
+    <div>
+      <h2>Upload an Image</h2>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload Image</button>
+      <p>{message}</p>
+      
+      {/* Display the uploaded image */}
+      {imageUrl && (
+        <div>
+          <h3>Uploaded Image:</h3>
+          <img src={imageUrl} alt="Uploaded preview" style={{ width: '300px', marginTop: '10px' }} />
+        </div>
+      )}
     </div>
   );
 }
