@@ -38,7 +38,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 PATCH_SIZE = 16
-IMG_SIZE = 128
+IMG_SIZE = 64
 k = 3
 
 def preprocess_image(image, target_size):
