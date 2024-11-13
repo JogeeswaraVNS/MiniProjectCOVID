@@ -8,17 +8,50 @@ import cv2
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
+from keras.models import load_model
+from keras.layers import PReLU
+from tensorflow.keras.preprocessing.image import img_to_array
 
 app = Flask(__name__)
 CORS(app)
+
+def squash(x, axis=-1):
+    s_squared_norm = tf.reduce_sum(tf.square(x), axis=axis, keepdims=True)
+    scale = s_squared_norm / (1 + s_squared_norm) / tf.sqrt(s_squared_norm + tf.keras.backend.epsilon())
+    return scale * x
+
+def loss_fn(y_true, y_pred):
+    L = y_true * tf.square(tf.maximum(0., 0.9 - y_pred)) + \
+        0.45 * (1 - y_true) * tf.square(tf.maximum(0., y_pred - 0.1))
+    return tf.reduce_mean(tf.reduce_sum(L, axis=1))
+
+custom_objects = {
+    'loss_fn': loss_fn,
+    'squash': squash,
+    'PReLU': PReLU
+}
+model = load_model('C:/Users/PVR SUDHAKAR/Desktop/MiniProjectCOVID/backend/Model/FilterModel.h5', custom_objects=custom_objects)
 
 UPLOAD_FOLDER = './uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-PATCH_SIZE = 32
+PATCH_SIZE = 16
 IMG_SIZE = 128
 k = 3
+
+def preprocess_image(file, target_size):
+    try:
+        file.seek(0)
+        image = Image.open(io.BytesIO(file.read()))
+        image = image.convert('RGB')
+        image = image.resize(target_size)
+        image = img_to_array(image)
+        image = np.expand_dims(image, axis=0)
+        return image
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        raise e
 
 def image_to_patches(image, patch_size):
     h, w, c = image.shape
@@ -40,7 +73,7 @@ def patches_to_image(patches, image_shape, patch_size):
     return image_reconstructed
 
 def save_image(image):
-    save_path = os.path.join(UPLOAD_FOLDER, 'PatchedImg.png')
+    save_path = os.path.join(UPLOAD_FOLDER, '/PatchedImg.png')
     print(save_path)
     cv2.imwrite(save_path, image)
 
@@ -75,6 +108,9 @@ def get_patch():
     patches = image_to_patches(image, PATCH_SIZE)
     updated_patches = process_patches_with_neighbors(patches, k)
     reconstructed_image = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    processed_image = preprocess_image(reconstructed_image, target_size=(IMG_SIZE, IMG_SIZE))
+    result=model.predict(processed_image)
+    print(result)
     save_image(reconstructed_image)
     img_io = io.BytesIO()
     Image.fromarray(reconstructed_image).save(img_io, 'PNG')

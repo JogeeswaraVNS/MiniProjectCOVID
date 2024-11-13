@@ -67,20 +67,23 @@ function Upload() {
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload Image</button>
       <p>{message}</p>
+
+      <div style={{width:'50%'}} className='row'>
       
       {uploadedImage && (
-        <div>
+        <div className='col'>
           <h3>Original Uploaded Image:</h3>
-          <img src={uploadedImage} alt="Uploaded" style={{ width: "20rem" }} />
+          <img src={uploadedImage} alt="Uploaded" style={{ width: "100%" }} />
         </div>
       )}
 
       {patchedImage && (
-        <div>
+        <div className='col'>
           <h3>Patched Image:</h3>
-          <img src={patchedImage} alt="Patched" style={{ width: "20rem" }} />
+          <img src={patchedImage} alt="Patched" style={{ width: "100%" }} />
         </div>
       )}
+      </div>
     </div>
   );
 }
