@@ -35,6 +35,9 @@ function Upload() {
       
       setMessage(uploadResponse.data.message);
 
+      // const formData = new FormData();
+      // formData.append("file", file);
+
       const response1 = await axios.post(
         `${api}/GradCamLayer1`,
         formData,
