@@ -200,6 +200,9 @@ def gradcam_layer_1():
     file = request.files['image']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
+    patches = image_to_patches(file, PATCH_SIZE)
+    updated_patches = process_patches_with_neighbors(patches, k)
+    file = patches_to_image(updated_patches, file.shape, PATCH_SIZE)
     preclass = {0: "Positive", 1: "Negative"}
     last_conv_layer_name = "cnn1"
     if file:
