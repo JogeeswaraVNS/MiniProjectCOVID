@@ -129,7 +129,7 @@ function Upload() {
   };
 
   return (
-    <div className="text-white text-center px-5 pt-5">
+    <div className="text-white text-center px-5 pt-4">
       <div>
         <h2
           style={{

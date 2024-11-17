@@ -209,7 +209,9 @@ def gradcam_layer_1():
     image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
     patches = image_to_patches(image, PATCH_SIZE)
     updated_patches = process_patches_with_neighbors(patches, k)
-    file = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    img_io = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    file = io.BytesIO()
+    Image.fromarray(img_io).save(file, 'PNG')
     preclass = {0: "Positive", 1: "Negative"}
     last_conv_layer_name = "cnn1"
     if file:
