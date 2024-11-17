@@ -6,6 +6,7 @@ function Upload() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [gradCamImage1, setGradCamImage1] = useState(null);
   const [patchedImage, setPatchedImage] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
 
@@ -33,6 +34,22 @@ function Upload() {
       });
       
       setMessage(uploadResponse.data.message);
+
+      const response1 = await axios.post(
+        `${api}/GradCamLayer1`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+          responseType: "blob",
+        }
+      );
+
+      const imageBlob1 = response1.data;
+      const imageUrl1 = URL.createObjectURL(imageBlob1);
+      setGradCamImage1(imageUrl1);
       
       // Extract image path from upload response
       const imageUrlPath = uploadResponse.data.image_url;
@@ -71,18 +88,25 @@ function Upload() {
       <div style={{width:'50%'}} className='row'>
       
       {uploadedImage && (
-        <div className='col-6'>
+        <div className='col-4'>
           <h3>Original Uploaded Image:</h3>
           <img src={uploadedImage} alt="Uploaded" style={{ width: "100%" }} />
         </div>
       )}
 
       {patchedImage && (
-        <div className='col-6'>
+        <div className='col-4'>
           <h3>Patched Image:</h3>
           <img src={patchedImage} alt="Patched" style={{ width: "100%" }} />
         </div>
       )}
+
+{gradCamImage1 && (
+          <div className="col-4">
+            <img src={gradCamImage1} alt="Grad-CAM" style={{ width: "85%" }} />
+            <h5 className="pt-2">CNN Layer 1 Grad-CAM</h5>
+          </div>
+        )}
       </div>
     </div>
   );

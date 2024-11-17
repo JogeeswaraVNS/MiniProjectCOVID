@@ -10,8 +10,10 @@ from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 from keras.models import load_model
 from keras.layers import PReLU
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.preprocessing.image import img_to_array,load_img
 import keras.backend as K
+import keras
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 CORS(app)
@@ -40,6 +42,61 @@ if not os.path.exists(UPLOAD_FOLDER):
 PATCH_SIZE = 16
 IMG_SIZE = 128
 k = 2
+
+def preprocess_image(file, target_size):
+    try:
+        file.seek(0)
+        image = Image.open(io.BytesIO(file.read()))
+        image = image.convert('RGB')
+        image = image.resize(target_size)
+        image = img_to_array(image)
+        image = np.expand_dims(image, axis=0)
+        return image
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        raise e
+
+# Helper function to generate Grad-CAM heatmap
+def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
+    grad_model = keras.models.Model(model.inputs, [model.get_layer(last_conv_layer_name).output, model.output])
+    
+    with tf.GradientTape() as tape:
+        last_conv_layer_output, preds = grad_model(img_array)
+        if pred_index is None:
+            pred_index = tf.argmax(preds[0])
+        class_channel = preds[:, pred_index]
+    
+    grads = tape.gradient(class_channel, last_conv_layer_output)
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    
+    last_conv_layer_output = last_conv_layer_output[0]
+    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
+    heatmap = tf.squeeze(heatmap)
+    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    return heatmap.numpy()
+
+# Function to save Grad-CAM image and return it as an in-memory file
+def save_gradcam_image(img_path, heatmap, alpha=0.4):
+    img = load_img(img_path)
+    img = img_to_array(img)
+
+    heatmap = np.uint8(255 * heatmap)
+    jet = plt.get_cmap("jet")
+    jet_colors = jet(np.arange(256))[:, :3]
+    jet_heatmap = jet_colors[heatmap]
+
+    jet_heatmap = tf.keras.preprocessing.image.array_to_img(jet_heatmap)
+    jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
+
+    jet_heatmap = img_to_array(jet_heatmap)
+    superimposed_img = jet_heatmap * alpha + img
+    superimposed_img = np.clip(superimposed_img, 0, 255).astype(np.uint8)
+
+    img_io = io.BytesIO()
+    Image.fromarray(superimposed_img).save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    return img_io
 
 
 def image_to_patches(image, patch_size):
@@ -120,6 +177,42 @@ def upload_image():
     image_path = os.path.join(UPLOAD_FOLDER, image.filename)
     image.save(image_path)
     return jsonify({"message": "Image uploaded successfully", "image_url": f"/uploads/{image.filename}"})
+
+
+# Route to handle file uploads and Grad-CAM generation Layer 1
+@app.route('/GradCamLayer1', methods=['POST'])
+def gradcam_layer_1():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    preclass = {0: "Positive", 1: "Negative"}
+    last_conv_layer_name = "cnn1"
+    if file:
+        processed_image = preprocess_image(file, target_size=(128, 128))
+        results = model.predict(processed_image)
+        response = preclass[np.argmax(results)]
+        
+        original_filename = file.filename
+        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
+        file.seek(0)
+        file.save(save_path)
+
+        img_array = preprocess_image(file, target_size=(128, 128))
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        gradcam_img_io = save_gradcam_image(save_path, heatmap)
+
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting file {save_path}: {e}")
+
+        return send_file(gradcam_img_io, mimetype='image/png')
+    else:
+        return jsonify("Error")
+
 
 if __name__ == '__main__':
     app.run(debug=True)
