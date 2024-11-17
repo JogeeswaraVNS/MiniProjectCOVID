@@ -222,7 +222,8 @@ def gradcam_layer_1():
         original_filename = "file.filename"
         save_path = os.path.join(UPLOAD_FOLDER, original_filename)
         file.seek(0)
-        file.save(save_path)
+        with open(save_path, 'wb') as f:
+            f.write(img_io.getvalue())
 
         img_array = preprocess_image(file, target_size=(128, 128))
         heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
