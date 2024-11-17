@@ -225,6 +225,116 @@ def gradcam_layer_1():
         return send_file(gradcam_img_io, mimetype='image/png')
     else:
         return jsonify("Error")
+    
+    
+
+# Route to handle file uploads and Grad-CAM generation Layer 2
+@app.route('/GradCamLayer2', methods=['POST'])
+def gradcam_layer_2():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    preclass = {0: "Positive", 1: "Negative"}
+    last_conv_layer_name = "cnn2"
+    if file:
+        processed_image = preprocess_image(file, target_size=(128, 128))
+        results = model.predict(processed_image)
+        response = preclass[np.argmax(results)]
+        
+        original_filename = file.filename
+        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
+        file.seek(0)
+        file.save(save_path)
+
+        img_array = preprocess_image(file, target_size=(128, 128))
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        gradcam_img_io = save_gradcam_image(save_path, heatmap)
+
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting file {save_path}: {e}")
+
+        return send_file(gradcam_img_io, mimetype='image/png')
+    else:
+        return jsonify("Error")
+    
+
+
+# Route to handle file uploads and Grad-CAM generation Layer 3
+@app.route('/GradCamLayer3', methods=['POST'])
+def gradcam_layer_3():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    preclass = {0: "Positive", 1: "Negative"}
+    last_conv_layer_name = "cnn3"
+    if file:
+        processed_image = preprocess_image(file, target_size=(128, 128))
+        results = model.predict(processed_image)
+        response = preclass[np.argmax(results)]
+        
+        original_filename = file.filename
+        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
+        file.seek(0)
+        file.save(save_path)
+
+        img_array = preprocess_image(file, target_size=(128, 128))
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        gradcam_img_io = save_gradcam_image(save_path, heatmap)
+
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting file {save_path}: {e}")
+
+        return send_file(gradcam_img_io, mimetype='image/png')
+    else:
+        return jsonify("Error")  
+    
+    
+    
+# Route to handle file uploads and Grad-CAM generation Layer 4
+@app.route('/GradCamLayer4', methods=['POST'])
+def gradcam_layer_4():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    preclass = {0: "Positive", 1: "Negative"}
+    last_conv_layer_name = "cnn4"
+    if file:
+        processed_image = preprocess_image(file, target_size=(128, 128))
+        results = model.predict(processed_image)
+        response = preclass[np.argmax(results)]
+        
+        original_filename = file.filename
+        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
+        file.seek(0)
+        file.save(save_path)
+
+        img_array = preprocess_image(file, target_size=(128, 128))
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        gradcam_img_io = save_gradcam_image(save_path, heatmap)
+
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting file {save_path}: {e}")
+
+        return send_file(gradcam_img_io, mimetype='image/png')
+    else:
+        return jsonify("Error")  
+    
+
 
 
 if __name__ == '__main__':
