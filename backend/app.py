@@ -182,6 +182,7 @@ def upload_image():
 # Route to handle file uploads and Grad-CAM generation Layer 1
 @app.route('/GradCamLayer1', methods=['POST'])
 def gradcam_layer_1():
+    print('hello')
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
