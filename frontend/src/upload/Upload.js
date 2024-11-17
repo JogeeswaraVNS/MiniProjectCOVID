@@ -51,7 +51,7 @@ function Upload() {
           'Content-Type': 'multipart/form-data',
           "ngrok-skip-browser-warning": "true",
         },
-        image_url: '.'+imageUrlPath
+        image_url: imageUrlPath
       }, {
         responseType: 'blob' // Expecting an image blob as response
       });

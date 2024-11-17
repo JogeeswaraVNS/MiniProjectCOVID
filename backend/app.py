@@ -176,7 +176,8 @@ def upload_image():
         return jsonify({"error": "No selected image"}), 400
     image_path = os.path.join(UPLOAD_FOLDER, image.filename)
     image.save(image_path)
-    image = cv2.imread(f"./uploads/{image.filename}")
+    img_url=f"./uploads/{image.filename}"
+    image = cv2.imread(img_url)
     if image is None:
         return jsonify({"error": "Failed to load image"}), 400
     image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
@@ -188,7 +189,7 @@ def upload_image():
     print(result)
     preclass = {0: "Positive", 1: "Negative"}
     res=preclass[np.argmax(result)]
-    return jsonify({"message": res, "image_url": f"/uploads/{image.filename}"})
+    return jsonify({"message": res, "image_url": img_url})
 
 
 # Route to handle file uploads and Grad-CAM generation Layer 1
