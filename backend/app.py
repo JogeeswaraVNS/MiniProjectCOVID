@@ -219,7 +219,7 @@ def gradcam_layer_1():
         results = model.predict(processed_image)
         response = preclass[np.argmax(results)]
         
-        original_filename = file.filename
+        original_filename = "file.filename"
         save_path = os.path.join(UPLOAD_FOLDER, original_filename)
         file.seek(0)
         file.save(save_path)
