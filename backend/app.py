@@ -31,15 +31,15 @@ custom_objects = {
     'squash': squash,
     'PReLU': PReLU
 }
-model = load_model('Models_GCNN/R4G2P16model.h5', custom_objects=custom_objects)
+model = load_model('../Models_GCNN/R4G2P16model.h5', custom_objects=custom_objects)
 
 UPLOAD_FOLDER = './uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 PATCH_SIZE = 16
-IMG_SIZE = 64
-k = 3
+IMG_SIZE = 128
+k = 2
 
 
 def image_to_patches(image, patch_size):

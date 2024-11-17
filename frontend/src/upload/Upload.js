@@ -71,14 +71,14 @@ function Upload() {
       <div style={{width:'50%'}} className='row'>
       
       {uploadedImage && (
-        <div className='col'>
+        <div className='col-6'>
           <h3>Original Uploaded Image:</h3>
           <img src={uploadedImage} alt="Uploaded" style={{ width: "100%" }} />
         </div>
       )}
 
       {patchedImage && (
-        <div className='col'>
+        <div className='col-6'>
           <h3>Patched Image:</h3>
           <img src={patchedImage} alt="Patched" style={{ width: "100%" }} />
         </div>
