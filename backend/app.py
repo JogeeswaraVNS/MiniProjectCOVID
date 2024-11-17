@@ -197,12 +197,19 @@ def upload_image():
 def gradcam_layer_1():
     if 'image' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    patches = image_to_patches(file, PATCH_SIZE)
+    image = request.files['image']
+    if image.filename == '':
+        return jsonify({"error": "No selected image"}), 400
+    image_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    image.save(image_path)
+    img_url=f"./uploads/{image.filename}"
+    image = cv2.imread(img_url)
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    patches = image_to_patches(image, PATCH_SIZE)
     updated_patches = process_patches_with_neighbors(patches, k)
-    file = patches_to_image(updated_patches, file.shape, PATCH_SIZE)
+    file = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
     preclass = {0: "Positive", 1: "Negative"}
     last_conv_layer_name = "cnn1"
     if file:
