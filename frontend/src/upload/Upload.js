@@ -35,24 +35,9 @@ function Upload() {
       
       setMessage(uploadResponse.data.message);
 
-      // const formData = new FormData();
-      // formData.append("file", file);
 
-      const response1 = await axios.post(
-        `${api}/GradCamLayer1`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "ngrok-skip-browser-warning": "true",
-          },
-          responseType: "blob",
-        }
-      );
 
-      const imageBlob1 = response1.data;
-      const imageUrl1 = URL.createObjectURL(imageBlob1);
-      setGradCamImage1(imageUrl1);
+
       
       // Extract image path from upload response
       const imageUrlPath = uploadResponse.data.image_url;
@@ -74,6 +59,22 @@ function Upload() {
       // Convert blob response to URL
       const patchedImageUrl = URL.createObjectURL(patchResponse.data);
       setPatchedImage(patchedImageUrl);
+
+      const response1 = await axios.post(
+        `${api}/GradCamLayer1`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "ngrok-skip-browser-warning": "true",
+          },
+          responseType: "blob",
+        }
+      );
+
+      const imageBlob1 = response1.data;
+      const imageUrl1 = URL.createObjectURL(imageBlob1);
+      setGradCamImage1(imageUrl1);
 
     } catch (error) {
       console.error('Error processing image:', error);

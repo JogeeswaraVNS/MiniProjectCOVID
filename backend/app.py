@@ -176,7 +176,19 @@ def upload_image():
         return jsonify({"error": "No selected image"}), 400
     image_path = os.path.join(UPLOAD_FOLDER, image.filename)
     image.save(image_path)
-    return jsonify({"message": "Image uploaded successfully", "image_url": f"/uploads/{image.filename}"})
+    image = cv2.imread(f"/uploads/{image.filename}")
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    patches = image_to_patches(image, PATCH_SIZE)
+    updated_patches = process_patches_with_neighbors(patches, k)
+    reconstructed_image = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    processed_image = np.expand_dims(reconstructed_image, axis=0)
+    result=model.predict(processed_image)
+    print(result)
+    preclass = {0: "Positive", 1: "Negative"}
+    res=preclass[np.argmax(result)]
+    return jsonify({"message": res, "image_url": f"/uploads/{image.filename}"})
 
 
 # Route to handle file uploads and Grad-CAM generation Layer 1
