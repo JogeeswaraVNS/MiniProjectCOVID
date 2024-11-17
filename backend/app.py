@@ -223,7 +223,7 @@ def gradcam_layer_1():
         save_path = os.path.join(UPLOAD_FOLDER, original_filename)
         file.seek(0)
         with open(save_path, 'wb') as f:
-            f.write(img_io.getvalue())
+            f.write(file.getvalue())
 
         img_array = preprocess_image(file, target_size=(128, 128))
         heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
@@ -246,9 +246,21 @@ def gradcam_layer_1():
 def gradcam_layer_2():
     if 'image' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
+    image = request.files['image']
+    if image.filename == '':
+        return jsonify({"error": "No selected image"}), 400
+    image_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    image.save(image_path)
+    img_url=f"./uploads/{image.filename}"
+    image = cv2.imread(img_url)
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    patches = image_to_patches(image, PATCH_SIZE)
+    updated_patches = process_patches_with_neighbors(patches, k)
+    img_io = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    file = io.BytesIO()
+    Image.fromarray(img_io).save(file, 'PNG')
     preclass = {0: "Positive", 1: "Negative"}
     last_conv_layer_name = "cnn2"
     if file:
@@ -256,10 +268,61 @@ def gradcam_layer_2():
         results = model.predict(processed_image)
         response = preclass[np.argmax(results)]
         
-        original_filename = file.filename
+        original_filename = "file.filename"
         save_path = os.path.join(UPLOAD_FOLDER, original_filename)
         file.seek(0)
-        file.save(save_path)
+        with open(save_path, 'wb') as f:
+            f.write(file.getvalue())
+
+        img_array = preprocess_image(file, target_size=(128, 128))
+        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
+
+        gradcam_img_io = save_gradcam_image(save_path, heatmap)
+
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting file {save_path}: {e}")
+
+        return send_file(gradcam_img_io, mimetype='image/png')
+    else:
+        return jsonify("Error") 
+    
+    
+    
+
+# Route to handle file uploads and Grad-CAM generation Layer 3
+@app.route('/GradCamLayer3', methods=['POST'])
+def gradcam_layer_3():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    image = request.files['image']
+    if image.filename == '':
+        return jsonify({"error": "No selected image"}), 400
+    image_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    image.save(image_path)
+    img_url=f"./uploads/{image.filename}"
+    image = cv2.imread(img_url)
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    patches = image_to_patches(image, PATCH_SIZE)
+    updated_patches = process_patches_with_neighbors(patches, k)
+    img_io = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    file = io.BytesIO()
+    Image.fromarray(img_io).save(file, 'PNG')
+    preclass = {0: "Positive", 1: "Negative"}
+    last_conv_layer_name = "cnn3"
+    if file:
+        processed_image = preprocess_image(file, target_size=(128, 128))
+        results = model.predict(processed_image)
+        response = preclass[np.argmax(results)]
+        
+        original_filename = "file.filename"
+        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
+        file.seek(0)
+        with open(save_path, 'wb') as f:
+            f.write(file.getvalue())
 
         img_array = preprocess_image(file, target_size=(128, 128))
         heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
@@ -275,52 +338,29 @@ def gradcam_layer_2():
     else:
         return jsonify("Error")
     
-
-
-# Route to handle file uploads and Grad-CAM generation Layer 3
-@app.route('/GradCamLayer3', methods=['POST'])
-def gradcam_layer_3():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    preclass = {0: "Positive", 1: "Negative"}
-    last_conv_layer_name = "cnn3"
-    if file:
-        processed_image = preprocess_image(file, target_size=(128, 128))
-        results = model.predict(processed_image)
-        response = preclass[np.argmax(results)]
-        
-        original_filename = file.filename
-        save_path = os.path.join(UPLOAD_FOLDER, original_filename)
-        file.seek(0)
-        file.save(save_path)
-
-        img_array = preprocess_image(file, target_size=(128, 128))
-        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
-
-        gradcam_img_io = save_gradcam_image(save_path, heatmap)
-
-        try:
-            os.remove(save_path)
-        except Exception as e:
-            print(f"Error deleting file {save_path}: {e}")
-
-        return send_file(gradcam_img_io, mimetype='image/png')
-    else:
-        return jsonify("Error")  
     
     
-    
+
 # Route to handle file uploads and Grad-CAM generation Layer 4
 @app.route('/GradCamLayer4', methods=['POST'])
 def gradcam_layer_4():
     if 'image' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
+    image = request.files['image']
+    if image.filename == '':
+        return jsonify({"error": "No selected image"}), 400
+    image_path = os.path.join(UPLOAD_FOLDER, image.filename)
+    image.save(image_path)
+    img_url=f"./uploads/{image.filename}"
+    image = cv2.imread(img_url)
+    if image is None:
+        return jsonify({"error": "Failed to load image"}), 400
+    image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
+    patches = image_to_patches(image, PATCH_SIZE)
+    updated_patches = process_patches_with_neighbors(patches, k)
+    img_io = patches_to_image(updated_patches, image.shape, PATCH_SIZE)
+    file = io.BytesIO()
+    Image.fromarray(img_io).save(file, 'PNG')
     preclass = {0: "Positive", 1: "Negative"}
     last_conv_layer_name = "cnn4"
     if file:
@@ -328,10 +368,11 @@ def gradcam_layer_4():
         results = model.predict(processed_image)
         response = preclass[np.argmax(results)]
         
-        original_filename = file.filename
+        original_filename = "file.filename"
         save_path = os.path.join(UPLOAD_FOLDER, original_filename)
         file.seek(0)
-        file.save(save_path)
+        with open(save_path, 'wb') as f:
+            f.write(file.getvalue())
 
         img_array = preprocess_image(file, target_size=(128, 128))
         heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
@@ -345,7 +386,7 @@ def gradcam_layer_4():
 
         return send_file(gradcam_img_io, mimetype='image/png')
     else:
-        return jsonify("Error")  
+        return jsonify("Error")
     
 
 
