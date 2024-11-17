@@ -31,7 +31,7 @@ custom_objects = {
     'squash': squash,
     'PReLU': PReLU
 }
-model = load_model('C:/Users/PVR SUDHAKAR/Desktop/MiniProjectCOVID/backend/Model/FilterModel.h5', custom_objects=custom_objects)
+model = load_model('Models_GCNN/R4G2P16model.h5', custom_objects=custom_objects)
 
 UPLOAD_FOLDER = './uploads'
 if not os.path.exists(UPLOAD_FOLDER):
